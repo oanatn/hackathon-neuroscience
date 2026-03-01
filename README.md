@@ -37,56 +37,87 @@ You are good to go! We will now take a look at what is available for us to use w
 
 ## Usage
 
-1. After your project has opened, navigate inside the Prefabs folder.
+0. Before running the project:
+   - Open Unicorn Suite
+   - Connect your Unicorn Hybrid Black device
+   - Make sure the device is detected and streaming properly
 
-![Unity Interface](https://github.com/Relu12345/BCI-Lab-Project/assets/94746838/e81ee394-f791-446e-804f-3c015f1f98af)
+1. After your project has opened, navigate inside the `Assets/g.tec/Unity Interface/Prefabs/BCI` folder.
 
-2. Here, you are presented with the main components of the Unicorn ERP Unity Interface (The UI elements are optional, but recommended for debugging!):
+![Unity Interface](https://github.com/user-attachments/assets/ac058890-c2d2-43b1-8522-f1babbb6ee53)
 
-![Unity Prefabs Folder](https://github.com/Relu12345/BCI-Lab-Project/assets/94746838/1cd9de28-f67c-4f24-832c-f7a1be91ab99)
+2. Here, you are presented with the main components of the Unicorn ERP Unity Interface:
 
-- **bciManager2D/3D**: These are the main components of the ERP Interface, you can use whichever fits your game idea, 2D or 3D. Each manager contains a respective 2D or 3D Flash Controller Script, which will handle the object's flashing.
+![Unity Prefabs Folder](https://github.com/user-attachments/assets/f185d3c8-a46d-4b39-816b-7055ce99ad92)
 
-### UI Elements
+- **BCI Visual ERP 2D/3D**: These are the main components of the ERP Interface, you can use whichever fits your game idea, 2D or 3D.
   
-- **battery**: A UI element that shows the current battery level of the headset.
-- **classifierAccuracy**: This is a UI element that displays the accuracy result of your last training. Make sure this atleast in the yellow if you want a good experience!
-- **dataLost**: Another UI element that shows up whenever there are packets lost from the headset.
-- **sqBar and sqBrain**: Two UI elements that are used for the same thing: Displaying what electrodes are working correctly. You only need to use one of them, as they do essentially the same thing.
+3. Drag and drop a BCI Visual ERP in your hierarchy / in your scene, coresponding to your game's perspective (2D or 3D). I will use 3D.
 
-3. Drag and drop a bciManager in your hierarchy / in your scene, coresponding to your game's perspective (2D or 3D). I will use 3D.
+![BCI Visual ERP](https://github.com/user-attachments/assets/3951935f-99d0-4554-a2bc-8c2935505ff0)
 
-![BCI Manager](https://github.com/Relu12345/BCI-Lab-Project/assets/94746838/44bdb9c9-c1db-4159-b099-66d2936c58ff)
+### Elements of the BCI Visual ERP component
+- **UI/BCIBarDocker_UI**: The main UI element of the ERP manager. Here, in the BCIUI script in the inspector, you can make your own UI elements, or use the ones available by default.
+- **Device/Pipelines**: Here you have the pipelines used by the ERP manager. You can just leave the as default for a classic BCI application, or you can add/create new ones. For those that want to also work with the EEG data, they can remove the `ERPPipeline` and add the `EEGData` pipeline from `Assets/g.tec/Unity Interface/Prefabs/Pipelines`, which gives you either Raw data, or pre-processed data using g.tec's in-house algorithm.
 
-4. Let's take a look at the Unity Inspector for a moment:
+### Unicorn Hybrid Black Unity Pipelines
 
-![BCI Manager Inspector](https://github.com/Relu12345/BCI-Lab-Project/assets/94746838/a941d204-e288-449c-812f-2e6b4ea10708)
+- **ERPPipeline**: The main pipeline used to handle ERP logic in your application. The default BCI Visual ERP 2D/3D's version also comes with the ERPParadigm pipeline, which is used for the settings of the objects used for flashing in this application. You can also used the advanced settings section to modify things like the threshold at which the selection is made and logging the data to CSV, but anything beyond that should be done only after researching thoroughly about each topic. 
+- **BatteryLevelPipeline**: A pipeline with an UI element that shows the current battery level of the headset.
+- **SignalQualityPipeline**: A pipeline with an UI element that continuously estimates the signal quality of the EEG provided by the attached device. You can modify the advanced settings if needed, but for most surface EEG cases, it is recommended to use the default settings.
+- **DataLostPipeline**: Another pipeline with an UI element that shows up whenever there are packets lost from the headset. You can also set what should happen when there is data lost.
 
-The BCI Manager has 2 scripts attached to it:
+### The ERP Pipeline
 
-- ERP Flash Controller 2D/3D
-- BCI Manager 2D/3D
+Here you will make the most changes, as they are needed for getting your application to an usable state.
 
-We are especially interested about the Flash Controller. This component enables the developer to create an object, which the user will use to train themselves in order to use the application. After the training, the user can then play the game as intended. Without the training section, the user will almost certainly be unable score an accuracy high enough to be able to have a pleasant experience with your game =)
+- **Flash Mode**: `ERP` or `ERP No Overlap`. The second option is used if you want to have the flashing be done without Off time.
+- **Number Of Training Trials**: This denotes how many times an object should flash before the training part is considered finished. The more training trails, the longer the training process, but also the better results, and vice-versa. 
+- **Number Of Classes**: This sets how many different types of ERP objects you want to use in the application. Keep in mind that the bigger this number is, the more it takes for the application to go through all of the objects, so selection of an object will take a lot longer than using a small number. The limits for the number of classes is 2-60, with anything below or above giving an error.
+- **On Time Ms**: This represents how much time should the flashing part be shown when selectin an object, in milliseconds.
+- **Off Time Ms**: Same as above, but for how long an object should stay in it's default form before selecting. This is not present when using `ERP No Overlap` flash mode.
 
-Before we continue, let's take a deeper look at every component of the Flash Controller:
+![ERP Pipeline](https://github.com/user-attachments/assets/520f752b-a1ed-417b-9cb6-2036d700b188)
 
-### BCI Settings
+### ERP Flash Tags
 
-- **Number Of Training Trials**: How many times should the training object flash. The higher the number, the more it will take to train, but also it the more chance of having a high accuracy. It takes values between 30-150, with a default of 60
-- **Flashtime Ms**: The frequency at which your BCI objects (including the training object) will flash at. It can take values between 50-300, with a default of 100. Even though a lower frequency might make the game more engaging and playable, making the objects stand out more and generaly be faster to select, this comes at the cost of eye tiredness and possibly even migraines. You have been warned!
-- **Number Of Classes**: Each BCI object will have a Class Id, which is required so that the API can flash each object at a different frequency from other object, thus making them individually selectable. It takes values between 4-15, with a default of 6. Even though you can create more objects than the limit, they will not work at the same time, they will work only if you destroy / disable other BCI objects, to make room for the new ones.
+In the ERP Visual ERP object, inside the ERPPipeline in it's hierarchy (`Device/Pipelines/ERPPipeline/ERPParadigm/ERPTags`), you can find the flash objects used in the application itself. The default prefab comes with 5 of them, one of which is the training object needed at the start of the runtime.
 
-### Flash Objects
+- **Is Training Object**: A bool that represents if the object will be used for training by the user, to make the end-user be able to select the other objects in the game. The training object has to be the same as (or atleast extremely similar to the) objects in the game, if you want the game to be any playable. Note: You can use the same `Class Id` for application objects too.
+- **Class Id**: This is the classification id of the object, used so that you can programmatically select objects.
+- **Flash and Dark Material / Sprite**: These are used to represent the training and BCI object's visual states, with the dark material / sprite (depending if you are making a 3D, respectively 2D game) representing the base material / texture of your object, and the flash material / sprite representing the object's visual appearance when flashing.
+- **Material Index**: This is used for changing the material of the current experiment.
 
-- **Training Object**: This represents the object you will use to train the user to be able to select the other objects in the game. The training object has to be the same as (or atleast extremely similar to the) objects in the game, if you want the game to be any playable.
-  - **Class Id**: This is the classification id of the object, used so that you can programmatically select objects. This can be left as default "1", as it does not interfere with the objects and is counted separately.
-  - **Game Object**: The object used to represent the BCI object, usually in a visual way, but this being a normal Unity Game Object, it can hold other scripts too or whatever your creative mind comes up with =)
-  - **Flash and Dark Material / Sprite**: These are used to represent the training and BCI object's visual states, with the dark material / sprite (depending if you are making a 3D, respectively 2D game) representing the base material / texture of your object, and the flash material / sprite representing the object's visual appearance when flashing.
+![Training Object](https://github.com/user-attachments/assets/a9aed41b-4d57-41b8-b931-282c4b711e90)
 
-### Application Objects
-They are the objects used in the game itself, with a setup exactly the same as the training object, but with the Class Id being separate from it, meaning if you used "1" for the training object, you can set your first BCI object as "1" too. Also, to keep in mind, there have to be at least 2 objects present in the game, unless you want an error:
+If you have the number of classes less or more than the limit, you will get an error similar to this, keep in mind.
 
 ![Objects Error](https://github.com/Relu12345/BCI-Lab-Project/assets/94746838/8e588205-e088-43f8-aea4-6c17f0a96dde)
+
+### Making your own code
+
+Here comes the fun part. There are a lot of event callbacks in the Unity package used for BCI development, which offer you tons of functionality that can be customized. You will most probably use, almost in exclusivity, the ERPPipeline's `On Class Selection` callback event. Here is an example of creating a new script, and then using it to show which class was selected. The code for our script, `BCISelection`:
+
+```
+using Gtec.Chain.Common.Templates.Utilities;
+using Gtec.UnityInterface;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class BCISelection : MonoBehaviour
+{
+    public void OnClassificationSelection(ERPPipeline erpPipeline, ClassSelection classSelection)
+    {
+        Debug.Log("ClassSelection: " + classSelection.Class.ToString());
+    }
+}
+```
+
+Then, in the ERPPipeline, you add the script and it's function to the callback event.
+
+![Callblack event](https://github.com/user-attachments/assets/1508a6e1-29f8-4bd5-866c-7967df64a2d1)
+
+This will make it so when you are selecting a certain object, you will see a log message saying which object was used. From here on, it is all about finding uses for this by yourselves, be creative.
 
 You are done with the setup instructions! You can go wild now =)
