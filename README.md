@@ -11,7 +11,7 @@ Template for the Neurotechnologies lab. It aims to give the student the resource
 
 - A CLI or GUI with support for Git. For example, i use [git-bash](https://gitforwindows.org/) as a CLI, and you can use [Github Desktop](https://desktop.github.com/) for GUI
 - [Unity Editor](https://unity.com/download) version 2022.3.62f3 or later
-- [Unicorn Suite Hybrid Black](https://drive.google.com/drive/folders/1HQdC3Z4UvMdq4kI41WmGn5_hrjTmk9xT?usp=sharing)
+- [Unicorn Suite Hybrid Black](https://drive.google.com/drive/folders/17qbtoRuF21MZq9gWymBsGcsaGAOl3G7E?usp=sharing)
 - [Unicorn Unity API Package](https://drive.google.com/file/d/1BtasXZZyl4hO5_aelALFlScgwdgIKI-u/view?usp=sharing) (Optional, for those that have already started a project and want to use it instead of this template)
 
 ## Installation
