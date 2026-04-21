@@ -89,7 +89,7 @@ In the ERP Visual ERP object, inside the ERPPipeline in it's hierarchy (`Device/
 - **Flash and Dark Material / Sprite**: These are used to represent the training and BCI object's visual states, with the dark material / sprite (depending if you are making a 3D, respectively 2D game) representing the base material / texture of your object, and the flash material / sprite representing the object's visual appearance when flashing.
 - **Material Index**: This is used for changing the material of the current experiment.
 
-![Training Object](https://github.com/user-attachments/assets/a9aed41b-4d57-41b8-b931-282c4b711e90)
+![Training Object]([https://github.com/user-attachments/assets/a9aed41b-4d57-41b8-b931-282c4b711e90](https://github.com/user-attachments/assets/93881eca-8215-48fd-a47f-006cc11b61f4))
 
 If you have the number of classes less or more than the limit, you will get an error similar to this, keep in mind.
 
