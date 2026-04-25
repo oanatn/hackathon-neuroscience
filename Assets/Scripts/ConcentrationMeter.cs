@@ -17,7 +17,7 @@ public class ConcentrationMeter : MonoBehaviour
 
     [Header("EEG")]
     public int sampleRate = 250;
-    public int windowSize = 256;
+    public int windowSize = 500;
     public int eegChannel = 0;
 
     [Header("Calibration")]
