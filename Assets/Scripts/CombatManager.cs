@@ -18,24 +18,32 @@ public class CombatManager : MonoBehaviour
     public BattleAnimatorController battleAnimator;
     public CombatUIController combatUI;
 
+    [Header("Attacks")]
+    public MonoBehaviour playerAttackBehaviour;
+    public MonoBehaviour enemyAttackBehaviour;
+
     [Header("Timing")]
     public float concentrationDuration = 2f;
     public float enemyTurnDelay = 1f;
 
-    [Header("Player Damage")]
-    public int weakDamage = 10;
-    public int strongDamage = 20;
-    public int specialDamage = 35;
-
-    [Header("Enemy Damage")]
-    public int enemyDamage = 12;
-
     public CombatTurn CurrentTurn { get; private set; }
+
+    private IAttack playerAttack;
+    private IAttack enemyAttack;
 
     private Coroutine activeRoutine;
 
     private void Start()
     {
+        playerAttack = playerAttackBehaviour as IAttack;
+        enemyAttack = enemyAttackBehaviour as IAttack;
+
+        if (playerAttack == null)
+            Debug.LogError("Player attack behaviour does not implement IAttack.");
+
+        if (enemyAttack == null)
+            Debug.LogError("Enemy attack behaviour does not implement IAttack.");
+
         StartPlayerChoice();
     }
 
@@ -44,11 +52,24 @@ public class CombatManager : MonoBehaviour
         if (IsCombatOver())
             return;
 
+        player.ProcessStartOfTurnConditions();
+
+        if (player.IsDead)
+        {
+            EndCombat(false);
+            return;
+        }
+
+        if (player.ShouldSkipTurn())
+        {
+            activeRoutine = StartCoroutine(EnemyTurnRoutine());
+            return;
+        }
+
         CurrentTurn = CombatTurn.PlayerChoosing;
         Debug.Log("Player turn: choose an action.");
     }
 
-    // Hook this to the Attack button.
     public void ChooseAttack()
     {
         if (CurrentTurn != CombatTurn.PlayerChoosing)
@@ -60,7 +81,6 @@ public class CombatManager : MonoBehaviour
         activeRoutine = StartCoroutine(PlayerAttackRoutine());
     }
 
-    // Hook this to the Run button.
     public void ChooseRun()
     {
         if (CurrentTurn != CombatTurn.PlayerChoosing)
@@ -80,22 +100,38 @@ public class CombatManager : MonoBehaviour
 
         yield return new WaitForSeconds(concentrationDuration);
 
+        if (playerAttack == null)
+        {
+            Debug.LogError("No valid player attack assigned.");
+            yield break;
+        }
+
         AttackResult result = concentrationMeter.GetAttackResult();
-        int damage = GetDamageFromAttackResult(result);
 
         if (battleAnimator != null)
             yield return StartCoroutine(battleAnimator.PlayPlayerAttack());
 
-        enemy.TakeDamage(damage);
+        int enemyHealthBefore = enemy.currentHealth;
+
+        playerAttack.Execute(player, enemy, result);
+
+        int damageDealt = enemyHealthBefore - enemy.currentHealth;
 
         if (combatUI != null)
-            combatUI.ShowAttackResult(result, damage);
+            combatUI.ShowAttackResult(result, damageDealt);
 
-        Debug.Log($"Player attack result: {result}. Damage dealt: {damage}.");
+        Debug.Log($"Player used {playerAttack.AttackName}. Result: {result}. Damage dealt: {damageDealt}.");
 
         if (enemy.IsDead)
         {
             EndCombat(true);
+            yield break;
+        }
+
+        if (player.ConsumeSpeedBoost())
+        {
+            Debug.Log("Player gets an extra turn from SpeedBoost.");
+            StartPlayerChoice();
             yield break;
         }
 
@@ -105,17 +141,40 @@ public class CombatManager : MonoBehaviour
     private IEnumerator EnemyTurnRoutine()
     {
         CurrentTurn = CombatTurn.EnemyTurn;
-
         Debug.Log("Enemy turn.");
 
         yield return new WaitForSeconds(enemyTurnDelay);
 
+        enemy.ProcessStartOfTurnConditions();
+
+        if (enemy.IsDead)
+        {
+            EndCombat(true);
+            yield break;
+        }
+
+        if (enemy.ShouldSkipTurn())
+        {
+            StartPlayerChoice();
+            yield break;
+        }
+
+        if (enemyAttack == null)
+        {
+            Debug.LogError("No valid enemy attack assigned.");
+            yield break;
+        }
+
         if (battleAnimator != null)
             yield return StartCoroutine(battleAnimator.PlayEnemyAttack());
 
-        player.TakeDamage(enemyDamage);
+        int playerHealthBefore = player.currentHealth;
 
-        Debug.Log($"Enemy dealt {enemyDamage} damage.");
+        enemyAttack.Execute(enemy, player, AttackResult.Weak);
+
+        int damageDealt = playerHealthBefore - player.currentHealth;
+
+        Debug.Log($"Enemy used {enemyAttack.AttackName}. Damage dealt: {damageDealt}.");
 
         if (player.IsDead)
         {
@@ -123,28 +182,14 @@ public class CombatManager : MonoBehaviour
             yield break;
         }
 
-        StartPlayerChoice();
-    }
-
-    private int GetDamageFromAttackResult(AttackResult result)
-    {
-        switch (result)
+        if (enemy.ConsumeSpeedBoost())
         {
-            case AttackResult.Fail:
-                return 0;
-
-            case AttackResult.Weak:
-                return weakDamage;
-
-            case AttackResult.Strong:
-                return strongDamage;
-
-            case AttackResult.Special:
-                return specialDamage;
-
-            default:
-                return 0;
+            Debug.Log("Enemy gets an extra turn from SpeedBoost.");
+            activeRoutine = StartCoroutine(EnemyTurnRoutine());
+            yield break;
         }
+
+        StartPlayerChoice();
     }
 
     private bool IsCombatOver()
@@ -169,9 +214,8 @@ public class CombatManager : MonoBehaviour
         if (combatUI != null)
             combatUI.ShowCombatEnded(playerWon);
 
-        if (playerWon)
-            Debug.Log("Combat ended: player won.");
-        else
-            Debug.Log("Combat ended: player lost or escaped.");
+        Debug.Log(playerWon
+            ? "Combat ended: player won."
+            : "Combat ended: player lost or escaped.");
     }
 }
