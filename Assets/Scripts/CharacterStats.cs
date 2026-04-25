@@ -11,10 +11,12 @@ public enum ConditionType
 
 public class CharacterStats : MonoBehaviour
 {
+[Header("Attack")]
+public AttackBase equippedAttack;
+
     [Header("Health")]
     public int maxHealth = 100;
     public int currentHealth = 100;
-
     [Header("Condition Settings")]
     public int burnDamagePerTurn = 5;
     public float weakenedDamageMultiplier = 0.5f;

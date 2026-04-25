@@ -1,26 +1,25 @@
 using UnityEngine;
 
-public class EarthAttack : MonoBehaviour, IAttack
+public class EarthAttack : AttackBase
 {
-    public string AttackName => "Earth Attack";
-
-    public AttackElement Element => AttackElement.Earth;
-
-    public int BaseDamage => 15;
-
-    public string AnimationTrigger => "EarthAttack";
+    public override string AttackName => "Earth Attack";
+    public override AttackElement Element => AttackElement.Earth;
+    public override int BaseDamage => 15;
+    public override string AnimationTrigger => "EarthAttack";
 
     [Header("Earth Effect")]
     [Range(0f, 1f)]
     public float stunChance = 0.35f;
 
-    public void Execute(
+    public override void Execute(
         CharacterStats attacker,
         CharacterStats defender,
         AttackResult concentrationResult
     )
     {
         int damage = CalculateDamage(concentrationResult);
+
+        damage = attacker.ModifyOutgoingDamage(damage);
 
         defender.TakeDamage(damage);
 
@@ -29,32 +28,9 @@ public class EarthAttack : MonoBehaviour, IAttack
         TryApplyStun(defender);
     }
 
-    private int CalculateDamage(AttackResult result)
-    {
-        switch (result)
-        {
-            case AttackResult.Fail:
-                return 0;
-
-            case AttackResult.Weak:
-                return BaseDamage;
-
-            case AttackResult.Strong:
-                return Mathf.RoundToInt(BaseDamage * 1.5f);
-
-            case AttackResult.Special:
-                return BaseDamage * 2;
-
-            default:
-                return BaseDamage;
-        }
-    }
-
     private void TryApplyStun(CharacterStats defender)
     {
-        float roll = Random.value;
-
-        if (roll <= stunChance)
+        if (Random.value <= stunChance)
         {
             defender.ApplyCondition(ConditionType.Stunned, 1);
             Debug.Log("Stun applied!");

@@ -1,14 +1,14 @@
 using UnityEngine;
 
-public class WaterAttack : MonoBehaviour, IAttack
+public class WaterAttack : AttackBase
 {
-    public string AttackName => "Water Attack";
+    public override string AttackName => "Water Attack";
 
-    public AttackElement Element => AttackElement.Water;
+    public override AttackElement Element => AttackElement.Water;
 
-    public int BaseDamage => 10;
+    public override int BaseDamage => 10;
 
-    public string AnimationTrigger => "WaterAttack";
+    public override string AnimationTrigger => "WaterAttack";
 
     [Header("Water Effect")]
     [Range(0f, 1f)]
@@ -16,7 +16,7 @@ public class WaterAttack : MonoBehaviour, IAttack
 
     public int weakenDuration = 1;
 
-    public void Execute(
+    public override void Execute(
         CharacterStats attacker,
         CharacterStats defender,
         AttackResult concentrationResult
@@ -24,32 +24,14 @@ public class WaterAttack : MonoBehaviour, IAttack
     {
         int damage = CalculateDamage(concentrationResult);
 
+        // Apply weaken modifier if attacker is affected
+        damage = attacker.ModifyOutgoingDamage(damage);
+
         defender.TakeDamage(damage);
 
         Debug.Log($"Water attack dealt {damage} damage.");
 
         TryApplyWeaken(defender);
-    }
-
-    private int CalculateDamage(AttackResult result)
-    {
-        switch (result)
-        {
-            case AttackResult.Fail:
-                return 0;
-
-            case AttackResult.Weak:
-                return BaseDamage;
-
-            case AttackResult.Strong:
-                return Mathf.RoundToInt(BaseDamage * 1.5f);
-
-            case AttackResult.Special:
-                return BaseDamage * 2;
-
-            default:
-                return BaseDamage;
-        }
     }
 
     private void TryApplyWeaken(CharacterStats defender)

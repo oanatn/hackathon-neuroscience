@@ -18,31 +18,27 @@ public class CombatManager : MonoBehaviour
     public BattleAnimatorController battleAnimator;
     public CombatUIController combatUI;
 
-    [Header("Attacks")]
-    public MonoBehaviour playerAttackBehaviour;
-    public MonoBehaviour enemyAttackBehaviour;
-
     [Header("Timing")]
     public float concentrationDuration = 2f;
     public float enemyTurnDelay = 1f;
 
     public CombatTurn CurrentTurn { get; private set; }
 
-    private IAttack playerAttack;
-    private IAttack enemyAttack;
-
     private Coroutine activeRoutine;
 
     private void Start()
     {
-        playerAttack = playerAttackBehaviour as IAttack;
-        enemyAttack = enemyAttackBehaviour as IAttack;
+        if (player == null)
+            Debug.LogError("Player CharacterStats reference is missing.");
 
-        if (playerAttack == null)
-            Debug.LogError("Player attack behaviour does not implement IAttack.");
+        if (enemy == null)
+            Debug.LogError("Enemy CharacterStats reference is missing.");
 
-        if (enemyAttack == null)
-            Debug.LogError("Enemy attack behaviour does not implement IAttack.");
+        if (player != null && player.equippedAttack == null)
+            Debug.LogError("Player has no equipped attack.");
+
+        if (enemy != null && enemy.equippedAttack == null)
+            Debug.LogError("Enemy has no equipped attack.");
 
         StartPlayerChoice();
     }
@@ -100,9 +96,9 @@ public class CombatManager : MonoBehaviour
 
         yield return new WaitForSeconds(concentrationDuration);
 
-        if (playerAttack == null)
+        if (player.equippedAttack == null)
         {
-            Debug.LogError("No valid player attack assigned.");
+            Debug.LogError("Player has no equipped attack.");
             yield break;
         }
 
@@ -113,14 +109,14 @@ public class CombatManager : MonoBehaviour
 
         int enemyHealthBefore = enemy.currentHealth;
 
-        playerAttack.Execute(player, enemy, result);
+        player.equippedAttack.Execute(player, enemy, result);
 
         int damageDealt = enemyHealthBefore - enemy.currentHealth;
 
         if (combatUI != null)
             combatUI.ShowAttackResult(result, damageDealt);
 
-        Debug.Log($"Player used {playerAttack.AttackName}. Result: {result}. Damage dealt: {damageDealt}.");
+        Debug.Log($"Player used {player.equippedAttack.AttackName}. Result: {result}. Damage dealt: {damageDealt}.");
 
         if (enemy.IsDead)
         {
@@ -159,9 +155,9 @@ public class CombatManager : MonoBehaviour
             yield break;
         }
 
-        if (enemyAttack == null)
+        if (enemy.equippedAttack == null)
         {
-            Debug.LogError("No valid enemy attack assigned.");
+            Debug.LogError("Enemy has no equipped attack.");
             yield break;
         }
 
@@ -170,11 +166,11 @@ public class CombatManager : MonoBehaviour
 
         int playerHealthBefore = player.currentHealth;
 
-        enemyAttack.Execute(enemy, player, AttackResult.Weak);
+        enemy.equippedAttack.Execute(enemy, player, AttackResult.Weak);
 
         int damageDealt = playerHealthBefore - player.currentHealth;
 
-        Debug.Log($"Enemy used {enemyAttack.AttackName}. Damage dealt: {damageDealt}.");
+        Debug.Log($"Enemy used {enemy.equippedAttack.AttackName}. Damage dealt: {damageDealt}.");
 
         if (player.IsDead)
         {

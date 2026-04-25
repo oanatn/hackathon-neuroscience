@@ -1,14 +1,14 @@
 using UnityEngine;
 
-public class AirAttack : MonoBehaviour, IAttack
+public class AirAttack : AttackBase
 {
-    public string AttackName => "Air Attack";
+    public override string AttackName => "Air Attack";
 
-    public AttackElement Element => AttackElement.Air;
+    public override AttackElement Element => AttackElement.Air;
 
-    public int BaseDamage => 11;
+    public override int BaseDamage => 11;
 
-    public string AnimationTrigger => "AirAttack";
+    public override string AnimationTrigger => "AirAttack";
 
     [Header("Air Effect")]
     [Range(0f, 1f)]
@@ -16,7 +16,7 @@ public class AirAttack : MonoBehaviour, IAttack
 
     public int speedDuration = 1;
 
-    public void Execute(
+    public override void Execute(
         CharacterStats attacker,
         CharacterStats defender,
         AttackResult concentrationResult
@@ -24,32 +24,14 @@ public class AirAttack : MonoBehaviour, IAttack
     {
         int damage = CalculateDamage(concentrationResult);
 
+        // Apply weaken modifier if attacker is affected
+        damage = attacker.ModifyOutgoingDamage(damage);
+
         defender.TakeDamage(damage);
 
         Debug.Log($"Air attack dealt {damage} damage.");
 
         TryApplySpeed(attacker);
-    }
-
-    private int CalculateDamage(AttackResult result)
-    {
-        switch (result)
-        {
-            case AttackResult.Fail:
-                return 0;
-
-            case AttackResult.Weak:
-                return BaseDamage;
-
-            case AttackResult.Strong:
-                return Mathf.RoundToInt(BaseDamage * 1.5f);
-
-            case AttackResult.Special:
-                return BaseDamage * 2;
-
-            default:
-                return BaseDamage;
-        }
     }
 
     private void TryApplySpeed(CharacterStats attacker)

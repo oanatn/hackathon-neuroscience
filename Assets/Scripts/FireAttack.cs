@@ -1,14 +1,14 @@
 using UnityEngine;
 
-public class FireAttack : MonoBehaviour, IAttack
+public class FireAttack : AttackBase
 {
-    public string AttackName => "Fire Attack";
+    public override string AttackName => "Fire Attack";
 
-    public AttackElement Element => AttackElement.Fire;
+    public override AttackElement Element => AttackElement.Fire;
 
-    public int BaseDamage => 12;
+    public override int BaseDamage => 12;
 
-    public string AnimationTrigger => "FireAttack";
+    public override string AnimationTrigger => "FireAttack";
 
     [Header("Fire Effect")]
     [Range(0f, 1f)]
@@ -17,7 +17,7 @@ public class FireAttack : MonoBehaviour, IAttack
     public int burnDuration = 3;
     public int burnDamagePerTurn = 5;
 
-    public void Execute(
+    public override void Execute(
         CharacterStats attacker,
         CharacterStats defender,
         AttackResult concentrationResult
@@ -25,32 +25,14 @@ public class FireAttack : MonoBehaviour, IAttack
     {
         int damage = CalculateDamage(concentrationResult);
 
+        // Apply weaken modifier if attacker is affected
+        damage = attacker.ModifyOutgoingDamage(damage);
+
         defender.TakeDamage(damage);
 
         Debug.Log($"Fire attack dealt {damage} damage.");
 
         TryApplyBurn(defender);
-    }
-
-    private int CalculateDamage(AttackResult result)
-    {
-        switch (result)
-        {
-            case AttackResult.Fail:
-                return 0;
-
-            case AttackResult.Weak:
-                return BaseDamage;
-
-            case AttackResult.Strong:
-                return Mathf.RoundToInt(BaseDamage * 1.5f);
-
-            case AttackResult.Special:
-                return BaseDamage * 2;
-
-            default:
-                return BaseDamage;
-        }
     }
 
     private void TryApplyBurn(CharacterStats defender)
