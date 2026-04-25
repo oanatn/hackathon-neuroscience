@@ -29,7 +29,7 @@ public class FakeEEGSimulator : MonoBehaviour
             float randomNoise = Random.Range(-noise, noise);
 
             float fakeEEG = alphaWave + betaWave + randomNoise;
-            Debug.Log(fakeEEG);
+            // Debug.Log(fakeEEG);
             concentrationMeter.AddEEGSample(fakeEEG);
         }
     }
