@@ -15,6 +15,8 @@ public class CombatManager : MonoBehaviour
     public ConcentrationMeter concentrationMeter;
     public CharacterStats player;
     public CharacterStats enemy;
+    public BattleAnimatorController battleAnimator;
+    public CombatUIController combatUI;
 
     [Header("Timing")]
     public float concentrationDuration = 2f;
@@ -81,7 +83,13 @@ public class CombatManager : MonoBehaviour
         AttackResult result = concentrationMeter.GetAttackResult();
         int damage = GetDamageFromAttackResult(result);
 
+        if (battleAnimator != null)
+            yield return StartCoroutine(battleAnimator.PlayPlayerAttack());
+
         enemy.TakeDamage(damage);
+
+        if (combatUI != null)
+            combatUI.ShowAttackResult(result, damage);
 
         Debug.Log($"Player attack result: {result}. Damage dealt: {damage}.");
 
@@ -101,6 +109,9 @@ public class CombatManager : MonoBehaviour
         Debug.Log("Enemy turn.");
 
         yield return new WaitForSeconds(enemyTurnDelay);
+
+        if (battleAnimator != null)
+            yield return StartCoroutine(battleAnimator.PlayEnemyAttack());
 
         player.TakeDamage(enemyDamage);
 
@@ -154,6 +165,9 @@ public class CombatManager : MonoBehaviour
             StopCoroutine(activeRoutine);
             activeRoutine = null;
         }
+
+        if (combatUI != null)
+            combatUI.ShowCombatEnded(playerWon);
 
         if (playerWon)
             Debug.Log("Combat ended: player won.");
