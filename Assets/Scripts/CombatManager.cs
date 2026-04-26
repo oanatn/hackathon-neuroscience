@@ -19,10 +19,11 @@ public class CombatManager : MonoBehaviour
     public CombatUIController combatUI;
 
     [Header("Timing")]
-    public float concentrationDuration = 2f;
+    public float concentrationDuration = 10f;
     public float enemyTurnDelay = 1f;
 
     public CombatTurn CurrentTurn { get; private set; }
+    public float ConcentrationTimeRemaining { get; private set; }
 
     private Coroutine activeRoutine;
 
@@ -92,10 +93,17 @@ public class CombatManager : MonoBehaviour
     private IEnumerator PlayerAttackRoutine()
     {
         CurrentTurn = CombatTurn.PlayerConcentrating;
+        ConcentrationTimeRemaining = concentrationDuration;
+
         Debug.Log("Concentrate now!");
 
-        yield return new WaitForSeconds(concentrationDuration);
+        while (ConcentrationTimeRemaining > 0f)
+        {
+            ConcentrationTimeRemaining -= Time.deltaTime;
+            ConcentrationTimeRemaining = Mathf.Max(0f, ConcentrationTimeRemaining);
 
+            yield return null;
+        }
         if (player.equippedAttack == null)
         {
             Debug.LogError("Player has no equipped attack.");

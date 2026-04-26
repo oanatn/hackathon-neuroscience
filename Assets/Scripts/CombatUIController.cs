@@ -91,9 +91,9 @@ public class CombatUIController : MonoBehaviour
                 break;
 
             case CombatTurn.PlayerConcentrating:
-                turnText.text = "Concentrate!";
+                int secondsLeft = Mathf.CeilToInt(combatManager.ConcentrationTimeRemaining);
+                turnText.text = $"Concentrate! {secondsLeft}";
                 break;
-
             case CombatTurn.EnemyTurn:
                 turnText.text = "Enemy turn";
                 break;
