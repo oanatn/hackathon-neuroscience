@@ -11,8 +11,8 @@ public class CombatUIController : MonoBehaviour
     public CharacterStats enemy;
 
     [Header("Health UI")]
-    public Slider playerHealthBar;
-    public Slider enemyHealthBar;
+    public Image playerHealthBar;
+    public Image enemyHealthBar;
     public TMP_Text playerHealthText;
     public TMP_Text enemyHealthText;
 
@@ -33,28 +33,12 @@ public class CombatUIController : MonoBehaviour
         if (runButton != null)
             runButton.onClick.AddListener(OnRunClicked);
 
-        SetupHealthBars();
         RefreshUI();
     }
 
     private void Update()
     {
         RefreshUI();
-    }
-
-    private void SetupHealthBars()
-    {
-        if (player != null && playerHealthBar != null)
-        {
-            playerHealthBar.maxValue = player.maxHealth;
-            playerHealthBar.value = player.currentHealth;
-        }
-
-        if (enemy != null && enemyHealthBar != null)
-        {
-            enemyHealthBar.maxValue = enemy.maxHealth;
-            enemyHealthBar.value = enemy.currentHealth;
-        }
     }
 
     private void RefreshUI()
@@ -70,7 +54,7 @@ public class CombatUIController : MonoBehaviour
         if (player != null)
         {
             if (playerHealthBar != null)
-                playerHealthBar.value = player.currentHealth;
+                playerHealthBar.fillAmount = (float)player.currentHealth / player.maxHealth;
 
             if (playerHealthText != null)
                 playerHealthText.text = $"{player.currentHealth}/{player.maxHealth}";
@@ -79,7 +63,7 @@ public class CombatUIController : MonoBehaviour
         if (enemy != null)
         {
             if (enemyHealthBar != null)
-                enemyHealthBar.value = enemy.currentHealth;
+                enemyHealthBar.fillAmount = (float)enemy.currentHealth / enemy.maxHealth;
 
             if (enemyHealthText != null)
                 enemyHealthText.text = $"{enemy.currentHealth}/{enemy.maxHealth}";
